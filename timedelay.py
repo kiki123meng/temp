@@ -27,14 +27,13 @@ if __name__ == '__main__':
     oplog = MongoClient("mongodb://localhost:27017/?directConnection=true").local.oplog.rs
     stamp = oplog.find().sort('$natural', ASCENDING).limit(-1).next()['wall']
 #   print(stamp)
-#   print("你哈嘎嘎哈哈哈哈哈哈哈哈哈")
     #print(ObjectId("62958e6b9863e55c5be7c8b2").getTimestamp())
    # a = new ObjectId("62958e6b9863e55c5be7c8b2")
     #print(a.getTimestamp())
     while True:
         kw = {}
 
-        kw['filter'] = {'op':'i','wall': {'$gt': stamp},'ns':'test.col'}
+        kw['filter'] = {'op':'i','wall': {'$gt': stamp},'ns':{'$regex':'[0-9]+_TradeFlow.(TradeRecord|OrderRecord)'}}
         kw['cursor_type'] = CursorType.TAILABLE_AWAIT
         kw['oplog_replay'] = True
 
@@ -44,12 +43,18 @@ if __name__ == '__main__':
             while cursor.alive:
                 for doc in cursor:
                     stamp = doc['o']
+                    print(stamp)
                     cur = stamp['_id']
                     #print(time.mktime(cur.generation_time.timetuple))
                     #print(stamp)
 
-                    print(id2time(str(cur)))
-                    print(doc['wall'])
+                    src_gen_time = (cur.generation_time).replace(tzinfo=None)
+                    dst_gen_time = doc['wall']
+                    delay = (dst_gen_time-src_gen_time).total_seconds()
+                    print(delay)  # Do something with doc.
+
+                    #print(id2time(str(cur)))
+                    #print(doc['wall'])
                     #print(doc)  # Do something with doc.
                     #print(doc['ts'])
                 sleep(_SLEEP)
