@@ -6,7 +6,7 @@ from pymongo.errors import AutoReconnect
 
 if __name__ == '__main__':
     oplog = MongoClient("mongodb://localhost:27017/?directConnection=true").local.oplog.rs
-    curtime_stamp = oplog.find().sort('$natural', ASCENDING).limit(1).next()['wall']
+    curtime_stamp = oplog.find().sort('$natural', DESCENDING).limit(1).next()['wall']
     
     while True:
         search_arguments = {}
