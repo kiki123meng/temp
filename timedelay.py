@@ -6,8 +6,9 @@ from pymongo.errors import AutoReconnect
 
 if __name__ == '__main__':
     oplog = MongoClient("mongodb://localhost:27017/?directConnection=true").local.oplog.rs
-    curtime_stamp = oplog.find().sort('$natural', DESCENDING).limit(1).next()['wall']
-    
+    curtime_stamp = oplog.find().sort('$natural', DESCENDING).limit(-1).next()['wall']
+    print(curtime_stamp)
+    print('停下')
     while True:
         search_arguments = {}
         search_arguments['filter'] = {'op':'i','wall': {'$gt': curtime_stamp}, 'ns':{'$regex':'[0-9]+_TradeFlow.(TradeRecord|OrderRecord)'}}
@@ -20,8 +21,8 @@ if __name__ == '__main__':
             while cursor.alive:
                 for doc in cursor:
                     raw_data = doc['o'] 
-                    data_id = stamp['_id']
-                    src_gen_time = (cur.generation_time).replace(tzinfo=None)
+                    data_id = raw_data['_id']
+                    src_gen_time = (data_id.generation_time).replace(tzinfo=None)
                     dst_gen_time = doc['wall']
                     delay = (dst_gen_time - src_gen_time).total_seconds()
                     print(delay)  
