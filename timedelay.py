@@ -3,7 +3,7 @@ from bson.objectid import ObjectId
 from pymongo import MongoClient, DESCENDING
 from pymongo.cursor import CursorType
 from pymongo.errors import AutoReconnect
-from prometheus_client import Counter, Gauge, Summary
+from prometheus_client import Counter, Gauge, Summary, Histogram
 from prometheus_client import start_http_server
 
 if __name__ == '__main__':
@@ -12,15 +12,14 @@ if __name__ == '__main__':
     print(start_timestamp)
 
     start_http_server(8081)
-    # todo: 整理命名和描述
-    c = Counter('record_counter', 'Description of counter', ['src_host_name', 'collection'])
 
-    # todo: 整理命名和描述
-    g = Gauge('record_latency', 'Description of gauge', ['src_host_name', 'collection'])
+    c = Counter('documents_total', '统计documents总数', ['src_host_name', 'collection'])
 
-    # todo: 整理命名和描述
-    s = Summary('record_latency_summary', 'xx', ['src_host_name', 'collection'])
+    g = Gauge('everydocument_latency', '监听document延时', ['src_host_name', 'collection'])
 
+    s = Summary('record_latency_summary', '监听document延时分位', ['src_host_name', 'collection'])
+
+    h = Histogram('record_latency_histogram','监听document延时直方图', ['src_host_name', 'collection'])
     while True:
         search_arguments = {}
         search_arguments['filter'] = {'op': 'i', 'wall': {'$gt': start_timestamp},
@@ -41,10 +40,10 @@ if __name__ == '__main__':
                     print(delay)
                     collection_name = doc['ns'].split('.')[1]
 
-                    # todo: 整理命名和描述
                     c.labels(raw_data['src_host_name'], collection_name).inc()
                     g.labels(raw_data['src_host_name'], collection_name).set(delay)
                     s.labels(raw_data['src_host_name'], collection_name).observe(delay)
+                    h.labels(raw_data['src_host_name'], collection_name).observe(delay)
 
                 time.sleep(0.1)
         except AutoReconnect:
