@@ -13,13 +13,14 @@ if __name__ == '__main__':
 
     start_http_server(8081)
 
-    c = Counter('documents_total', '统计documents总数', ['src_host_name', 'collection'])
+    c = Counter('documents_total', '统计documents总数', ['src_host_name', 'account_id', 'collection'])
 
-    g = Gauge('everydocument_latency', '监听document延时', ['src_host_name', 'collection'])
+    g = Gauge('everydocument_latency', '监听document延时', ['src_host_name', 'account_id', 'collection'])
 
-    s = Summary('record_latency_summary', '监听document延时分位', ['src_host_name', 'collection'])
+    s = Summary('record_latency_summary', '监听document延时分位', ['src_host_name', 'account_id', 'collection'])
 
-    h = Histogram('record_latency_histogram','监听document延时直方图', ['src_host_name', 'collection'])
+    h = Histogram('record_latency_histogram','监听document延时直方图', ['src_host_name', 'account_id', 'collection'])
+
     while True:
         search_arguments = {}
         search_arguments['filter'] = {'op': 'i', 'wall': {'$gt': start_timestamp},
@@ -40,10 +41,10 @@ if __name__ == '__main__':
                     print(delay)
                     collection_name = doc['ns'].split('.')[1]
 
-                    c.labels(raw_data['src_host_name'], collection_name).inc()
-                    g.labels(raw_data['src_host_name'], collection_name).set(delay)
-                    s.labels(raw_data['src_host_name'], collection_name).observe(delay)
-                    h.labels(raw_data['src_host_name'], collection_name).observe(delay)
+                    c.labels(raw_data['src_host_name'], raw_data['account_id'], collection_name).inc()
+                    g.labels(raw_data['src_host_name'], raw_data['account_id'], collection_name).set(delay)
+                    s.labels(raw_data['src_host_name'], raw_data['account_id'], collection_name).observe(delay)
+                    h.labels(raw_data['src_host_name'], raw_data['account_id'], collection_name).observe(delay)
 
                 time.sleep(0.1)
         except AutoReconnect:
